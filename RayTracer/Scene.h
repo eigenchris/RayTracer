@@ -34,29 +34,54 @@ public:
 
 };
 
-vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vec3 lightPosition, vec3 lightColour) {
-	// ambient lighting
-	const float ambientStrength = 0.1f;
+/*
+PHONG MODEL:
+ks, kd, ka are the sppecular, diffuse, and ambient constants,
+alpha - shininess constant (for determining the size of the specular reflection)
+L = object-to-light source direction vector
+N = surface normal vector 
+V = object-to-view/camera direction vector
+R = object-to-reflection direction vector (R = 2(L.N)N -L)
+
+Ip = k_a*i_a + sum(over all light sources m) k_d(L_m.N)i_m,d  +  k_s((R_m.V)^alpha)*(i_m,s)
+*/
+
+vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSource*>* lightSources) {
+	// constants
+	const float ambientReflectionConstant = 0.1f;
+	const float diffuseReflectionConstant = 0.5f;
+	const float specularReflectionConstant = 0.5f;
+	const int shininessConstant = 32;
 	
-	// diffuse lighting
-	vec3 hitToLightDir = normalize(lightPosition - hitPosition);
-	float diffuseStrength = std::max(dot(normal, hitToLightDir), 0.0f);
+	// ambient lighting
+	vec3 ambientPortion = ambientReflectionConstant*vec3(1, 1, 1); // doesn't belong to any particular light source
+	vec3 diffusePortion = vec3(0, 0, 0);
+	vec3 specularPortion = vec3(0, 0, 0);
+	for (int i = 0; i<lightSources->size(); i++) {
+		LightSource* light = (*lightSources)[i];
 
-	// specular lighting
-	const float specMult = 0.5;
-	vec3 hitToCameraDir = normalize(camera->position - hitPosition);
-	vec3 reflectDir = reflect(-hitToLightDir, normal);
-	float specularStrength = specMult * pow(std::max(dot(hitToCameraDir, reflectDir), 0.0f), 32);
+		// diffuse lighting
+		vec3 hitToLightDir = normalize(light->position - hitPosition);
+		float dotProduct = dot(normal, hitToLightDir);
+		if (dotProduct < 0.0f) dotProduct = 0.0f;
+		diffusePortion += diffuseReflectionConstant*dotProduct*light->colour;
 
-	float lightFactor = ambientStrength + diffuseStrength + specularStrength;
-	if (lightFactor > 1.0f) lightFactor = 1.0f;
-	vec3 outputColour = lightFactor * lightColour;
+		// specular lighting
+		vec3 hitToCameraDir = normalize(camera->position - hitPosition);
+		vec3 reflectDir = reflect(-hitToLightDir, normal);
+		float powerTerm = pow(std::max(dot(hitToCameraDir, reflectDir), 0.0f), shininessConstant);
+		specularPortion += specularReflectionConstant*powerTerm*light->colour;
+	}
 
-	//if (lightColour.x > 1.0f) lightColour.x = 1.0f; // this adds weird effects, like making the light too green and stuff
-	//if (lightColour.y > 1.0f) lightColour.y = 1.0f;
-	//if (lightColour.z > 1.0f) lightColour.z = 1.0f;
+	vec3 totalLight = ambientPortion + diffusePortion + specularPortion;
 
-	return vec4(outputColour,1.0f);
+	//if (totalLight > 1.0f) totalLight = 1.0f;
+	
+	if (totalLight.x > 1.0f) totalLight.x = 1.0f; // this adds weird effects, like making the light too green and stuff
+	if (totalLight.y > 1.0f) totalLight.y = 1.0f;
+	if (totalLight.z > 1.0f) totalLight.z = 1.0f;
+	
+	return vec4(totalLight,1.0f);
 }
 
 
@@ -93,10 +118,10 @@ Shape* Intersect(Ray ray, Scene* scene, vec3& closestHit) {
 vec4 FindColour(Scene* scene, Camera* camera, Shape* shape, vec3 hitPosition) {
 	vec3 normal = shape->GetNormal(hitPosition);
 	
-	vector<LightSource*> lightList= *(scene->lightSources);
-	LightSource* light = lightList[0];
+	vector<LightSource*>* lightList= (scene->lightSources);
+	//LightSource* light = lightList[0];
 
-	vec4 lightEffect = PhongShader(hitPosition, normal, camera, light->position, light->colour);
+	vec4 lightEffect = PhongShader(hitPosition, normal, camera, lightList);
 	return lightEffect * shape->colour;
 }
 

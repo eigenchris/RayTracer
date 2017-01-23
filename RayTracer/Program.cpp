@@ -28,12 +28,16 @@ int main() {
 
 	Sphere* sphere = new Sphere(vec3(-3, 0, -6), 1, vec4(0,0.5,1,1));
 	Sphere* sphere2 = new Sphere(vec3(1, 2, -7), 1, vec4(0.6, 0.8, 0.4, 1));
-	Triangle* triangle = new Triangle(vec3(2, 1, -5), vec3(1, -1, -6), vec3(3, -1, -3), vec4(1,0,0,1));
+	Sphere* sphere3 = new Sphere(vec3(2, -1, -5), 1, vec4(1.0, 0.35, 0.1, 1));
+	//Triangle* triangle = new Triangle(vec3(2, 1, -5), vec3(1, -1, -6), vec3(3, -1, -3), vec4(1,0,0,1));
 	scene->shapes->push_back((Shape*)sphere);
 	scene->shapes->push_back((Shape*)sphere2);
-	scene->shapes->push_back((Shape*)triangle);
-	LightSource* light = new LightSource{ vec3(0, 2, -5), vec4(1, 1, 1, 1) };
+	scene->shapes->push_back((Shape*)sphere3);
+	//scene->shapes->push_back((Shape*)triangle);
+	LightSource* light = new LightSource{ vec3(0, 2, -5), vec3(1, 1, 1) };
+	LightSource* light2 = new LightSource{ vec3(0, -2, -5), vec3(1, 1, 1) };
 	scene->lightSources->push_back(light);
+	scene->lightSources->push_back(light2);
 
 
 	RayTrace(camera, scene, frameBuffer, WIDTH, HEIGHT);

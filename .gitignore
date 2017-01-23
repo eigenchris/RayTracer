@@ -1,7 +1,8 @@
+RayTracer.VC.VC.opendb
+RayTracer.VC.db
+Debug/*
 
+packages/*
 RayTracer/Debug/*
-
-RayTracer/packages/*
-RayTracer/RayTracer/Debug/*
-RayTracer/RayTracer/output.png
+RayTracer/output.png
 .vs/*
