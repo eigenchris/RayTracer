@@ -1,0 +1,7 @@
+
+RayTracer/Debug/*
+
+RayTracer/packages/*
+RayTracer/RayTracer/Debug/*
+RayTracer/RayTracer/output.png
+.vs/*
