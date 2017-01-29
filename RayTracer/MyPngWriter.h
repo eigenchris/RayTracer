@@ -6,9 +6,9 @@
 
 using namespace std;
 
-void MyPngWriter(FrameBuffer& buffer, int width, int height, std::string filename) {
+void MyPngWriter(FrameBuffer* buffer, int width, int height, std::string filename) {
 	int numPixels = height*width;
-	float* colourBuffer = buffer.colourBuffer;
+	float* colourBuffer = buffer->colourBuffer;
 
 	unsigned char* r = new unsigned char[numPixels];  // red
 	unsigned char* g = new unsigned char[numPixels];  // green

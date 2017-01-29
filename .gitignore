@@ -4,5 +4,5 @@ Debug/*
 
 packages/*
 RayTracer/Debug/*
-RayTracer/output.png
+RayTracer/output*
 .vs/*

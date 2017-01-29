@@ -4,17 +4,12 @@
 #include<glm\glm.hpp>
 
 using namespace glm;
+using namespace std;
 
 class Camera {
 private:
-	Camera(vec3 pos, vec3 fwd, vec3 up, int width, int height) {
-		position = pos;
-		forward = normalize(fwd);
-		upward = normalize(up);
-		side = cross(forward, up);
-
-		widthPixels = width;
-		heightPixels = height;
+	Camera(vec3 pos, vec3 fwd, vec3 up, int width, int height) : widthPixels(width), heightPixels(height) {
+		SetVectors(pos, fwd, up);
 
 		widthDistance = 2;
 		heightDistance = 2;
@@ -22,11 +17,60 @@ private:
 	}
 
 public:
-	vec3 position, forward, upward, side;
-	int widthPixels, heightPixels;
+	vec3 position, backward, upward, side;
+	const int widthPixels, heightPixels;
 	float widthDistance, heightDistance, screenDistance;
+	glm::mat4 cameraCoordsToWorldCoordsMatrix;
+	glm::mat4 worldCoordsToCameraCoordsMatrix;
 
-	Camera(int width, int height) : Camera( vec3(0, 0, 0), vec3(0, 0, -1), vec3(0, 1, 0), width, height ) {}
+	Camera(int width, int height) : Camera( vec3(0, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0), width, height ) {}
+
+	void SetVectors(vec3 pos, vec3 bkwd, vec3 up) {
+		position = pos;
+		backward = normalize(bkwd);
+		upward = normalize(up);
+		side = cross(up, backward);
+		
+		this->cameraCoordsToWorldCoordsMatrix = glm::mat4(vec4(side,0), vec4(upward,0), vec4(backward,0), vec4(position,1));
+		this->worldCoordsToCameraCoordsMatrix = glm::inverse(cameraCoordsToWorldCoordsMatrix);
+	}
+
+	// third component returns z-depth value
+	vec3 worldPointToProjectedCanvasPoint(vec3 pointInWorldCoords) {
+		vec4 pointInCameraCoords = this->worldCoordsToCameraCoordsMatrix * vec4(pointInWorldCoords, 1.0f);
+		vec3 projection;
+		projection.x = this->screenDistance * pointInCameraCoords.x / -pointInCameraCoords.z;
+		projection.y = this->screenDistance * pointInCameraCoords.y / -pointInCameraCoords.z;
+		projection.z = -pointInCameraCoords.z; //+z poitns outward toward us... it's better to count z distance into the screen as positive.
+		return projection;
+	}
+
+	// third component returns z-depth value
+	vec3 worldPointToPixelCoords(vec3 pointInWorldCoords) {
+		vec3 canvasCoords = this->worldPointToProjectedCanvasPoint(pointInWorldCoords);
+		vec2 pixelCoords = this->canvasPointToPixelCoordsV(vec2(canvasCoords.x,canvasCoords.y));
+		return vec3(pixelCoords, canvasCoords.z);
+	}
+
+	vec2 canvasPointToPixelCoordsV(const vec2& canvasPoint) {
+		//float i = (1 - ((canvasPoint.y + this->heightDistance / 2.0f) / (this->heightDistance))) * this->heightPixels;
+		//float j = ((canvasPoint.x + this->widthDistance / 2.0f) / (this->widthDistance)) * this->widthPixels;
+		float i = (1.0f/2.0f - (canvasPoint.y/this->heightDistance)) * this->heightPixels;
+		float j = ((canvasPoint.x/this->widthDistance) + 1.0f/2.0f) * this->widthPixels;
+		return vec2(j, i);
+	}
+
+	void canvasPointToPixelCoords(float canvasX, float canvasY, int& i, int& j) {
+		i = (1 - ((canvasY + this->heightDistance / 2.0f) / (this->heightDistance))) * this->heightPixels;
+		j = ((canvasX + this->widthDistance / 2.0f) / (this->widthDistance)) * this->widthPixels;
+	}
+
+	void pixelCoordsToCanvasPoint(int i, int j, float& canvasX, float& canvasY) {
+		canvasX = ((j + 0.5f) / this->heightPixels)*this->heightDistance - this->heightDistance / 2.0f;
+		canvasY = (1 - ((i + 0.5f) / this->widthPixels))*this->widthDistance - this->widthDistance / 2.0f;
+	}
+
+
 };
 
 struct LightSource {
@@ -41,6 +85,7 @@ struct Ray {
 
 class Shape {
 public:
+	string tag = "Shape";
 	vec4 colour = vec4(1, 1, 1, 1);
 	virtual bool Intersect(const Ray& ray, vec3& intersectionPoint, vec3& normal) = 0;
 	virtual vec3 GetNormal(const vec3& point) = 0;
@@ -50,12 +95,12 @@ class Sphere : Shape {
 public:
 	vec3 center;
 	float radius;
+	
 
-	Sphere(vec3 center, float radius) : center(center), radius(radius) {
-		this->colour = vec4(1, 1, 1, 1);
-	}
+	Sphere(vec3 center, float radius) : Sphere(center, radius, vec4(1,1,1,1)) { }
 	Sphere(vec3 center, float radius, vec4 colour) : center(center), radius(radius) {
 		this->colour = colour;
+		this->tag = "Sphere";
 	}
 
 	// based on (P-C).(P-C) = r^2 -> (dir.dir)t^2 + 2*dir.(org-C)t + |org-C|^2 - r^2 = 0 
@@ -92,20 +137,20 @@ public:
 class Triangle : Shape {
 public:
 	vec3 pA, pB, pC, normalVector;
+	vec3 cA, cB, cC; // colour
 
+	Triangle(vec3 a, vec3 b, vec3 c) : Triangle(a, b, c, vec4(1, 1, 1, 1)) { }
 	Triangle(vec3 a, vec3 b, vec3 c, vec4 colour) : pA(a), pB(b), pC(c) {
 		vec3 v1(b - a);
 		vec3 v2(c - a);
 		normalVector = normalize(cross(v1, v2));
 		this->colour = colour;
-	}
-	Triangle(vec3 a, vec3 b, vec3 c) : pA(a), pB(b), pC(c) {
-		vec3 v1(b - a);
-		vec3 v2(c - a);
-		normalVector = normalize(cross(v1, v2));
-		this->colour = vec4(1,1,1,1);
-	}
+		this->cA = colour;
+		this->cB = colour;
+		this->cC = colour;
 
+		this->tag = "Triangle";
+	}	
 
 	bool Intersect(const Ray& ray, vec3& intersectionPoint, vec3& normal) {
 		// based on (p - a).normal = 0
