@@ -14,12 +14,13 @@ private:
 		widthDistance = 2;
 		heightDistance = 2;
 		screenDistance = 1;
+		farplane = 100;
 	}
 
 public:
 	vec3 position, backward, upward, side;
 	const int widthPixels, heightPixels;
-	float widthDistance, heightDistance, screenDistance;
+	float widthDistance, heightDistance, screenDistance, farplane;
 	glm::mat4 cameraCoordsToWorldCoordsMatrix;
 	glm::mat4 worldCoordsToCameraCoordsMatrix;
 

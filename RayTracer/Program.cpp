@@ -65,8 +65,15 @@ int main() {
 	tri2->cA = vec3(1, 0, 0);
 	tri2->cB = vec3(0, 1, 0);
 	tri2->cC = vec3(0, 0, 1);
+
+	Triangle* tri3 = new Triangle(vec3(0.8, 1, 3.5), vec3(-0.2, -1, 3.5), vec3(1.8, -1, 3.5), vec4(1.0));
+	tri3->cA = vec3(0, 0.5, 1);
+	tri3->cB = vec3(0, 0.5, 1);
+	tri3->cC = vec3(0, 0.5, 1);
+
 	scene->shapes->push_back((Shape*)tri1);
 	scene->shapes->push_back((Shape*)tri2);
+	scene->shapes->push_back((Shape*)tri3);
 
 	//RayTrace(camera, scene, frameBuffer);
 	Rasterizer(camera, scene, frameBuffer);

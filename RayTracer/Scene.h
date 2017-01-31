@@ -222,6 +222,9 @@ void Rasterizer(Camera* camera, Scene* scene, FrameBuffer* frameBuffer) {
 					//	1/Z = w0/Z0 + w1/Z1 + w2/Z2
 					float z = 1/(w0/v0.z + w1/v1.z + w2/v2.z);
 
+					// if z doesn't fall between the near and far planes, ignore this pixel
+					if (z < camera->screenDistance || camera->farplane < z) continue;
+
 					// if z is father away than the current object, then ignore this pixel
 					if (z >= frameBuffer->zBuffer[i*imageWidth + j]) continue;			
 
