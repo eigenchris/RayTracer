@@ -18,7 +18,7 @@ private:
 	}
 
 public:
-	vec3 position, backward, upward, side;
+	vec3 positionInWorldCoords, backwardInWorldCoords, upwardInWorldCoords, sideInWorldCoords;
 	const int widthPixels, heightPixels;
 	float widthDistance, heightDistance, screenDistance, farplane;
 	glm::mat4 cameraCoordsToWorldCoordsMatrix;
@@ -27,12 +27,12 @@ public:
 	Camera(int width, int height) : Camera( vec3(0, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0), width, height ) {}
 
 	void SetVectors(vec3 pos, vec3 bkwd, vec3 up) {
-		position = pos;
-		backward = normalize(bkwd);
-		upward = normalize(up);
-		side = cross(up, backward);
+		positionInWorldCoords = pos;
+		backwardInWorldCoords = normalize(bkwd);
+		upwardInWorldCoords = normalize(up);
+		sideInWorldCoords = cross(up, backwardInWorldCoords);
 		
-		this->cameraCoordsToWorldCoordsMatrix = glm::mat4(vec4(side,0), vec4(upward,0), vec4(backward,0), vec4(position,1));
+		this->cameraCoordsToWorldCoordsMatrix = glm::mat4(vec4(sideInWorldCoords,0), vec4(upwardInWorldCoords,0), vec4(backwardInWorldCoords,0), vec4(positionInWorldCoords,1));
 		this->worldCoordsToCameraCoordsMatrix = glm::inverse(cameraCoordsToWorldCoordsMatrix);
 	}
 

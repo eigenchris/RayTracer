@@ -67,7 +67,7 @@ vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSour
 		diffusePortion += diffuseReflectionConstant*dotProduct*light->colour;
 
 		// specular lighting
-		vec3 hitToCameraDir = normalize(camera->position - hitPosition);
+		vec3 hitToCameraDir = normalize(camera->positionInWorldCoords - hitPosition);
 		vec3 reflectDir = reflect(-hitToLightDir, normal);
 		float powerTerm = pow(std::max(dot(hitToCameraDir, reflectDir), 0.0f), shininessConstant);
 		specularPortion += specularReflectionConstant*powerTerm*light->colour;
@@ -87,15 +87,16 @@ vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSour
 
 Ray RayThruPixel(Camera* camera, int i, int j) {
 	Ray ray;
-	ray.origin = camera->position;
-
-	//float posX = ((i + 0.5f) / camera->heightPixels)*camera->heightDistance - camera->heightDistance / 2.0f;
-	//float posY = (1 - ((j + 0.5f) / camera->widthPixels))*camera->widthDistance - camera->widthDistance / 2.0f;
+	ray.origin = camera->positionInWorldCoords;
 
 	float posX, posY;
 	camera->pixelCoordsToCanvasPoint(i, j, posX, posY);
+	ray.direction = (camera->screenDistance*-camera->backwardInWorldCoords) + (posX*camera->sideInWorldCoords) + (posY*camera->upwardInWorldCoords);
 
-	ray.direction = (camera->screenDistance*-camera->backward) + (posX*camera->side) + (posY*camera->upward);
+	ray.origin = camera->cameraCoordsToWorldCoordsMatrix * vec4(ray.origin,1);
+	ray.direction = camera->cameraCoordsToWorldCoordsMatrix * vec4(ray.direction,1);
+	// M*(P_cam - O_cam) = M*P_cam - M*O_cam = P_world - O_world
+
 	return ray;
 }
 
