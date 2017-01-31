@@ -89,10 +89,13 @@ Ray RayThruPixel(Camera* camera, int i, int j) {
 	Ray ray;
 	ray.origin = camera->position;
 
-	float posX = ((i + 0.5f) / camera->heightPixels)*camera->heightDistance - camera->heightDistance / 2.0f;
-	float posY = (1 - ((j + 0.5f) / camera->widthPixels))*camera->widthDistance - camera->widthDistance / 2.0f;
+	//float posX = ((i + 0.5f) / camera->heightPixels)*camera->heightDistance - camera->heightDistance / 2.0f;
+	//float posY = (1 - ((j + 0.5f) / camera->widthPixels))*camera->widthDistance - camera->widthDistance / 2.0f;
 
-	ray.direction = (camera->screenDistance*camera->backward) + (posX*camera->side) + (posY*camera->upward);
+	float posX, posY;
+	camera->pixelCoordsToCanvasPoint(i, j, posX, posY);
+
+	ray.direction = (camera->screenDistance*-camera->backward) + (posX*camera->side) + (posY*camera->upward);
 	return ray;
 }
 
@@ -146,6 +149,26 @@ void RayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer) {
 	}
 
 }
+
+enum MaterialType {
+	REFLECTION_AND_REFRACTION,
+	REFLECTION,
+};
+
+// Snells law - computing the angle of refraction based on refractive index:
+//		n1*sin(th1) = n2*sin(th2)
+// Fresnel equations - computing how much light is reflected and how much is transmitted
+//
+//		hitColor = reflectionColor * kr + refractionColor * (1 - kr); 
+void RecursiveRayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer) {
+	for (int i = 0; i < buffer->height; i++) {
+		for (int j = 0; j < buffer->width; j++) {
+
+		}
+	}
+}
+
+
 
 /*
 RayTrace(Camera cam, Scene scene, int width, int height) {
