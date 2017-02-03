@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 
+#include <Camera.h>
 #include <Shapes.h>
 #include <FrameBuffer.h>
 
@@ -35,6 +36,61 @@ public:
 };
 
 /*
+Albega = reflect light / incident light
+	   = % light reflected
+
+Law of reflection: th_incident = th_reflection
+	R = I - 2(N.I)N
+Snell's Law: n1*sin(th1) = n2*sin(th2)
+	n = refractive index = c/v
+Transmission ray:
+	T = eta*I + (eta*c1 -c2)N
+	c1 = cos(th1) = I.N
+	c2 = cos(th2) = sqrt( 1 - (eta^2)*sin(th1)^2 )
+	sin(th1)^2 = 1 - cos(th1)^2 = 1 - c1*c1
+	eta = n1/n2
+Fresnel equations:
+	R||	= ( (n2*cos(th1) - n1*cos(th2))/(n2*cos(th1) + n1*cos(th2)) )^2
+	R_|_= ( (n1*cos(th1) - n2*cos(th2))/(n1*cos(th1) + n2*cos(th2)) )^2
+
+	R = 1/2 * (R|| + R_|_)
+	T = 1 - R 
+*/
+
+vec3 Reflect(const vec3& incident, const vec3& normal) {
+	return incident - 2 * (dot(normal, incident))*normal;
+}
+
+vec3 Transmit(const vec3& incident, const vec3& normal, const float& n1, const float& n2) {
+	float c1 = dot(normal, incident);
+
+	// the normal vector should point *away* from the boundary we are approaching
+	// there is a chance that we might approaching the boundary from the "inside"
+	vec3 normalRef = normal;
+	if (c1 < 0) { c1 = -c1; }
+	else { normalRef = -normal; }
+
+	float eta = n1 / n2;
+	float k = 1 - eta*eta*(1 - c1*c1);
+	if (k < 0) return vec3(0);	// total internal reflection (only if n2>n1)
+	vec3 transmitted = eta*incident + (eta*c1 - sqrt(k))*normalRef;
+	
+	transmitted = normalize(transmitted);
+	return transmitted;
+}
+
+float Fresnel(const vec3& incident, const vec3& transmission, const vec3& normal, const float& n1, const float& n2) {
+	float cos1 = fabs(dot(incident, normal));
+	float cos2 = fabs(dot(transmission, normal));
+
+	float R_parallel = (n2*cos1 - n1*cos2) / (n2*cos1 + n1*cos2);
+	float R_perpendidular = (n1*cos1 - n2*cos2) / (n1*cos1 + n2*cos2);
+
+	float reflectionFraction = 0.5*(R_parallel*R_parallel + R_perpendidular*R_perpendidular);
+	return reflectionFraction;
+}
+
+/*
 PHONG MODEL:
 ks, kd, ka are the sppecular, diffuse, and ambient constants,
 alpha - shininess constant (for determining the size of the specular reflection)
@@ -44,7 +100,15 @@ V = object-to-view/camera direction vector
 R = object-to-reflection direction vector (R = 2(L.N)N -L)
 
 Ip = k_a*i_a + sum(over all light sources m) k_d(L_m.N)i_m,d  +  k_s((R_m.V)^alpha)*(i_m,s)
+
+
+Should I Tint Specular Reflections with the Objects' Color?
+		NO		
+if the material is delectric (i.e. non-conductor/non-metal)
+A specular reflection is only a reflection of a light source off of the surface of an object.
 */
+
+
 
 vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSource*>* lightSources) {
 	// constants
@@ -54,7 +118,7 @@ vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSour
 	const int shininessConstant = 32;
 	
 	// ambient lighting
-	vec3 ambientPortion = ambientReflectionConstant*vec3(1, 1, 1); // doesn't belong to any particular light source
+	vec3 ambientPortion = vec3(1, 1, 1); // doesn't belong to any particular light source
 	vec3 diffusePortion = vec3(0, 0, 0);
 	vec3 specularPortion = vec3(0, 0, 0);
 	for (int i = 0; i<lightSources->size(); i++) {
@@ -64,16 +128,16 @@ vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSour
 		vec3 hitToLightDir = normalize(light->position - hitPosition);
 		float dotProduct = dot(normal, hitToLightDir);
 		if (dotProduct < 0.0f) dotProduct = 0.0f;
-		diffusePortion += diffuseReflectionConstant*dotProduct*light->colour;
+		diffusePortion += dotProduct*light->colour;
 
 		// specular lighting
 		vec3 hitToCameraDir = normalize(camera->positionInWorldCoords - hitPosition);
 		vec3 reflectDir = reflect(-hitToLightDir, normal);
 		float powerTerm = pow(std::max(dot(hitToCameraDir, reflectDir), 0.0f), shininessConstant);
-		specularPortion += specularReflectionConstant*powerTerm*light->colour;
+		specularPortion += powerTerm*light->colour; // case for tinting specular reflection with colour
 	}
 
-	vec3 totalLight = ambientPortion + diffusePortion + specularPortion;
+	vec3 totalLight = ambientReflectionConstant*ambientPortion + diffuseReflectionConstant*diffusePortion + specularReflectionConstant*specularPortion;
 
 	//if (totalLight > 1.0f) totalLight = 1.0f;
 	
@@ -100,8 +164,26 @@ Ray RayThruPixel(Camera* camera, int i, int j) {
 	return ray;
 }
 
-Shape* Intersect(Ray ray, Scene* scene, vec3& closestHit) {
+// Solve for t in the equation
+//	ray.origin + ray.direction*t = targetPoint
+float GetNumberOfUnitsAway(const Ray& ray, const vec3& targetPoint) {
+	float answer;
+	if (ray.direction.x != 0) {
+		answer = (targetPoint.x - ray.origin.x) / ray.direction.x;
+	}
+	else if (ray.direction.y != 0) {
+		answer = (targetPoint.y - ray.origin.y) / ray.direction.y;
+	}
+	else {
+		answer = (targetPoint.z - ray.origin.z) / ray.direction.z;
+	}
+	if (answer < 0) answer = INFINITY;
+	return answer;
+}
+
+Shape* GetClosestIntersection(Ray ray, Scene* scene, vec3& closestHit) {
 	vec3 hit, normal;
+	float howManyUnitsAway, bestUnitsAway = INFINITY;
 	bool foundHit = false;
 	Shape* returnShape = nullptr;
 
@@ -109,10 +191,14 @@ Shape* Intersect(Ray ray, Scene* scene, vec3& closestHit) {
 
 	for (int i = 0; i < shapeList.size(); i++) {
 		if (shapeList[i]->Intersect(ray, hit, normal)) {
-			// if we haven't found a collision, or if the new collision is closer
-			if (!foundHit || hit.z < closestHit.z) {
+			howManyUnitsAway = GetNumberOfUnitsAway(ray, hit);
+			if (howManyUnitsAway < 0 || howManyUnitsAway==INFINITY) continue; // ignore objects which are "behind" the ray, or which hit nothing
+			// only save data if we've never hit before, or if the new collision is the closest yet in the forward direction
+			if (!foundHit || howManyUnitsAway < bestUnitsAway) {
+				foundHit = true;
 				closestHit = hit;
-				returnShape = shapeList[i];
+				bestUnitsAway = howManyUnitsAway;
+				returnShape = shapeList[i];				
 			}
 		}
 	}
@@ -122,7 +208,7 @@ Shape* Intersect(Ray ray, Scene* scene, vec3& closestHit) {
 vec4 FindColour(Scene* scene, Camera* camera, Shape* shape, vec3 hitPosition) {
 	vec3 normal = shape->GetNormal(hitPosition);
 	
-	vector<LightSource*>* lightList= (scene->lightSources);
+	vector<LightSource*>* lightList = (scene->lightSources);
 	//LightSource* light = lightList[0];
 
 	vec4 lightEffect = PhongShader(hitPosition, normal, camera, lightList);
@@ -135,7 +221,7 @@ void RayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer) {
 	for (int i = 0; i<buffer->height; i++) {
 		for (int j = 0; j<buffer->width; j++) {
 			Ray ray = RayThruPixel(camera, i, j);
-			Shape* hitShape = Intersect(ray, scene, closestHit);
+			Shape* hitShape = GetClosestIntersection(ray, scene, closestHit);
 			if (hitShape == nullptr) {
 				colour = scene->backgroundColour;
 			}
@@ -151,20 +237,67 @@ void RayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer) {
 
 }
 
-enum MaterialType {
-	REFLECTION_AND_REFRACTION,
-	REFLECTION,
-};
 
-// Snells law - computing the angle of refraction based on refractive index:
-//		n1*sin(th1) = n2*sin(th2)
-// Fresnel equations - computing how much light is reflected and how much is transmitted
-//
-//		hitColor = reflectionColor * kr + refractionColor * (1 - kr); 
-void RecursiveRayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer) {
+vec4 TraceRayToColour(Ray incidentRay, Scene* scene, Camera* camera, int recursesLeft, float ambientRefractionIndex = 1.0f) {
+	const float bias = 10e-3;
+	vec4 colour;
+	vec3 closestHit;
+	vec3 reflectedRayDir, transmittedRayDir, reflectedRayPos, transmittedRayPos, biasVector;
+	bool fromOutside;
+
+	Shape* hitShape = GetClosestIntersection(incidentRay, scene, closestHit);
+	if (hitShape == nullptr) return vec4(0,0,0,1); // we just return the background colour if we don't hit any objects
+	vec3 normal = hitShape->GetNormal(closestHit);
+
+	switch (hitShape->materialType) {
+	case(REFLECTION_AND_REFRACTION): {
+		if (recursesLeft == 0) return vec4(0,0,0,1);
+
+		fromOutside = dot(normal, incidentRay.direction) < 0; //inefficient... I'm also doing this in the Transmit function
+		float incomingRefractionIndex = fromOutside ? ambientRefractionIndex : hitShape->refractiveIndex;
+		float outgoingRefractionIndex = fromOutside ? hitShape->refractiveIndex : ambientRefractionIndex;
+
+		reflectedRayDir = Reflect(incidentRay.direction, normal);
+		transmittedRayDir = Transmit(incidentRay.direction, normal, incomingRefractionIndex, outgoingRefractionIndex);
+		float reflectedPercentage = Fresnel(incidentRay.direction, transmittedRayDir, normal, incomingRefractionIndex, outgoingRefractionIndex);
+
+		biasVector = fromOutside ? bias*normal : -bias*normal; // points "up" back toward the incident ray direction
+		reflectedRayPos = closestHit + biasVector;
+		transmittedRayPos = closestHit - biasVector;
+
+		vec4 reflectedColour = TraceRayToColour(Ray{ reflectedRayPos,reflectedRayDir }, scene, camera, recursesLeft - 1);
+		vec4 transmittedColour = TraceRayToColour(Ray{ transmittedRayPos,transmittedRayDir }, scene, camera, recursesLeft - 1);
+		return reflectedPercentage*reflectedColour + (1 - reflectedPercentage)*transmittedColour;
+		}
+		break;
+	case(REFLECTION): {
+		if (recursesLeft == 0) return vec4(0,0,0,1);
+		fromOutside = dot(normal, incidentRay.direction) < 0; //inefficient... I'm also doing this in the Transmit function
+
+		reflectedRayDir = Reflect(incidentRay.direction, normal);
+		biasVector = fromOutside ? bias*normal : -bias*normal; // points "up" back toward the incident ray direction
+		reflectedRayPos = closestHit + biasVector;
+
+		return TraceRayToColour(Ray{ reflectedRayPos,reflectedRayDir }, scene, camera, recursesLeft - 1);
+		}
+		break;
+	case(DIFFUSE):
+		return FindColour(scene, camera, hitShape, closestHit);
+		break;
+	}
+}
+
+void RecursiveRayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer, int recurseNumber) {
 	for (int i = 0; i < buffer->height; i++) {
 		for (int j = 0; j < buffer->width; j++) {
+			Ray ray = RayThruPixel(camera, i, j);
+			ray.direction = normalize(ray.direction);
+			vec4 colour = TraceRayToColour(ray, scene, camera, recurseNumber);
 
+			buffer->colourBuffer[(i*buffer->width + j) * 4 + 0] = colour.x;
+			buffer->colourBuffer[(i*buffer->width + j) * 4 + 1] = colour.y;
+			buffer->colourBuffer[(i*buffer->width + j) * 4 + 2] = colour.z;
+			buffer->colourBuffer[(i*buffer->width + j) * 4 + 3] = colour.w;
 		}
 	}
 }
