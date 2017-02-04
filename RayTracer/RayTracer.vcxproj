@@ -158,6 +158,7 @@
     <ClInclude Include="MyPngWriter.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Shapes.h" />
+    <ClInclude Include="UnitTests.h" />
     <ClInclude Include="vec.h" />
   </ItemGroup>
   <ItemGroup>

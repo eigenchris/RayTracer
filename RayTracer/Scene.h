@@ -182,7 +182,7 @@ float GetNumberOfUnitsAway(const Ray& ray, const vec3& targetPoint) {
 }
 
 Shape* GetClosestIntersection(Ray ray, Scene* scene, vec3& closestHit) {
-	vec3 hit, normal;
+	vec3 hit;
 	float howManyUnitsAway, bestUnitsAway = INFINITY;
 	bool foundHit = false;
 	Shape* returnShape = nullptr;
@@ -190,7 +190,7 @@ Shape* GetClosestIntersection(Ray ray, Scene* scene, vec3& closestHit) {
 	vector<Shape*> shapeList = *(scene->shapes);
 
 	for (int i = 0; i < shapeList.size(); i++) {
-		if (shapeList[i]->Intersect(ray, hit, normal)) {
+		if (shapeList[i]->Intersect(ray, hit)) {
 			howManyUnitsAway = GetNumberOfUnitsAway(ray, hit);
 			if (howManyUnitsAway < 0 || howManyUnitsAway==INFINITY) continue; // ignore objects which are "behind" the ray, or which hit nothing
 			// only save data if we've never hit before, or if the new collision is the closest yet in the forward direction
@@ -290,6 +290,12 @@ vec4 TraceRayToColour(Ray incidentRay, Scene* scene, Camera* camera, int recurse
 void RecursiveRayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer, int recurseNumber) {
 	for (int i = 0; i < buffer->height; i++) {
 		for (int j = 0; j < buffer->width; j++) {
+
+			//if (i == 400 && j == 500) {
+			if (i == 500 && j == 250) {
+				cout << "at the stop point" << endl;
+			}
+
 			Ray ray = RayThruPixel(camera, i, j);
 			ray.direction = normalize(ray.direction);
 			vec4 colour = TraceRayToColour(ray, scene, camera, recurseNumber);

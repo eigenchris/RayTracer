@@ -91,24 +91,24 @@ void LoadScene3(Scene* scene) {
 
 // glass ball, triangle, and floor
 void LoadScene4(Scene* scene) {
-	Triangle* tri1 = new Triangle(vec3(-4, -0.5, 0), vec3(4, -0.5, 0), vec3(-4, -0.51, -10), vec4(1, 0, 0, 1));
-	Triangle* tri2 = new Triangle(vec3(-4, -0.51, -10), vec3(4, -0.5, 0), vec3(4, -0.51, -10), vec4(1, 0, 0, 1));
+	Triangle* tri1 = new Triangle(vec3(-4, -0.5, 0), vec3(4, -0.5, 0), vec3(-4, -0.5, -10), vec4(1, 0, 0, 1));
+	Triangle* tri2 = new Triangle(vec3(-4, -0.5, -10), vec3(4, -0.5, 0), vec3(4, -0.5, -10), vec4(1, 0, 0, 1));
 	
-	Triangle* tri3 = new Triangle(vec3(1, 2, -3.5), vec3(0, 0, -3.5), vec3(2, 0, -3.5), vec4(0, 0, 1, 1.0));
-	Triangle* tri4 = new Triangle(vec3(-2, 0, -10), vec3(0, 4, -10), vec3(2, 0, -10), vec4(0, 1, 0, 1.0));
+	Triangle* tri3 = new Triangle(vec3(1, 2, -4), vec3(0, 0.5, -4), vec3(2, 0.5, -4), vec4(0, 0, 1, 1.0));
+	Triangle* tri4 = new Triangle(vec3(-2, -0.5, -10), vec3(2, -0.5, -10), vec3(0, 4, -10), vec4(0, 1, 0, 1.0));
 
-	Sphere* sphere = new Sphere(vec3(0, 0.5, -4), 1, vec4(0, 0.5, 1, 1));
+	Sphere* sphere = new Sphere(vec3(0, 0, -4), 0.4, vec4(0, 0.5, 1, 1));
 	sphere->refractiveIndex = 0.8;
-	sphere->materialType = REFLECTION_AND_REFRACTION;
-	//sphere->materialType = REFLECTION;
+	//sphere->materialType = REFLECTION_AND_REFRACTION;
+	sphere->materialType = REFLECTION;
 
 	LightSource* light = new LightSource{ vec3(0.5, 2, -1), vec3(1, 1, 1) };
 
-	scene->shapes->push_back((Shape*)tri1);
-	scene->shapes->push_back((Shape*)tri2);
-	scene->shapes->push_back((Shape*)tri3);
+	//scene->shapes->push_back((Shape*)tri1);
+	//scene->shapes->push_back((Shape*)tri2);
+	//scene->shapes->push_back((Shape*)tri3);
 	scene->shapes->push_back((Shape*)tri4);
-	scene->shapes->push_back((Shape*)sphere);
+	//scene->shapes->push_back((Shape*)sphere);
 	scene->lightSources->push_back(light);
 }
 
