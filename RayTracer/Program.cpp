@@ -13,6 +13,7 @@
 #include <Scene.h>
 #include <Camera.h>
 #include <MyPngWriter.h>
+#include <UnitTests.h>
 
 using namespace std;
 using namespace glm;
@@ -99,16 +100,17 @@ void LoadScene4(Scene* scene) {
 
 	Sphere* sphere = new Sphere(vec3(0, 0, -4), 0.4, vec4(0, 0.5, 1, 1));
 	sphere->refractiveIndex = 0.8;
-	//sphere->materialType = REFLECTION_AND_REFRACTION;
-	sphere->materialType = REFLECTION;
+	sphere->materialType = REFLECTION_AND_REFRACTION;
+	//sphere->materialType = REFLECTION;
 
-	LightSource* light = new LightSource{ vec3(0.5, 2, -1), vec3(1, 1, 1) };
+	//LightSource* light = new LightSource{ vec3(0.5, 2, -1), vec3(1, 1, 1) };
+	LightSource* light = new LightSource{ vec3(0.5, 2, -3.8), vec3(1, 1, 1) };
 
-	//scene->shapes->push_back((Shape*)tri1);
-	//scene->shapes->push_back((Shape*)tri2);
-	//scene->shapes->push_back((Shape*)tri3);
+	scene->shapes->push_back((Shape*)tri1);
+	scene->shapes->push_back((Shape*)tri2);
+	scene->shapes->push_back((Shape*)tri3);
 	scene->shapes->push_back((Shape*)tri4);
-	//scene->shapes->push_back((Shape*)sphere);
+	scene->shapes->push_back((Shape*)sphere);
 	scene->lightSources->push_back(light);
 }
 

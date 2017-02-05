@@ -290,12 +290,6 @@ vec4 TraceRayToColour(Ray incidentRay, Scene* scene, Camera* camera, int recurse
 void RecursiveRayTrace(Camera* camera, Scene* scene, FrameBuffer* buffer, int recurseNumber) {
 	for (int i = 0; i < buffer->height; i++) {
 		for (int j = 0; j < buffer->width; j++) {
-
-			//if (i == 400 && j == 500) {
-			if (i == 500 && j == 250) {
-				cout << "at the stop point" << endl;
-			}
-
 			Ray ray = RayThruPixel(camera, i, j);
 			ray.direction = normalize(ray.direction);
 			vec4 colour = TraceRayToColour(ray, scene, camera, recurseNumber);

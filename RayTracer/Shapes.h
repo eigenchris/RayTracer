@@ -126,12 +126,10 @@ public:
 		float w1 = edgeFunctionForTriangle(pC, pA, intersectionPoint, this->normalVector);
 		float w2 = edgeFunctionForTriangle(pA, pB, intersectionPoint, this->normalVector);
 
-		if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		bool allPlus = w0 >= 0 && w1 >= 0 && w2 >= 0;
+		bool allMinus = w0 <= 0 && w1 <= 0 && w2 <= 0;
+
+		return allPlus || allMinus;
 
 
 		/*
