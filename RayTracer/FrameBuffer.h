@@ -1,6 +1,4 @@
-#ifndef FRAME_BUFFER_H
-
-#define FRAME_BUFFER_H
+#pragma once
 
 #include <stdint.h>
 #include <string.h>
@@ -41,6 +39,3 @@ public:
 	}
 
 };
-
-
-#endif // !FRAME_BUFFER_H

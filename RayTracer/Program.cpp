@@ -13,6 +13,8 @@
 #include <Scene.h>
 #include <Camera.h>
 #include <MyPngWriter.h>
+#include <Bezier.h>
+
 #include <UnitTests.h>
 
 using namespace std;
@@ -24,6 +26,10 @@ void LoadScene3(Scene*);
 void LoadScene4(Scene*);
 
 int main() {
+	BezierTest();
+	return 0;
+
+
 	cout << "Hello World!" << endl;
 
 	const int WIDTH = 512;

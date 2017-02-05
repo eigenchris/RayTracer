@@ -2,6 +2,7 @@
 
 #include <glm\glm.hpp>
 #include <Shapes.h>
+#include <Bezier.h>
 
 float Random01() {
 	return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -92,3 +93,40 @@ bool TestTriangleInterestions() {
 	return true;
 }
 
+bool BezierTest() {
+	vec3 P[4];
+	P[0] = vec3(0,0,0);
+	P[1] = vec3(0,1,0);
+	P[2] = vec3(1,1,0);
+	P[3] = vec3(1,0,0);
+
+	vec3 out1[4], out2[4];
+	SplitBezierHalf(P, out1, out2);
+	if( !(out1[1].x == 0 && out1[1].y == 0.5 && out1[2].x == 0.25 && out1[2].y == 0.75 && out1[3].x == 0.5 && out1[3].y == 0.75) ) {
+		throw "Bezier Split doesn't work";
+	}
+
+	vec3 P2d[16];
+	P2d[0] = vec3(0, 0, 0);
+	P2d[1] = vec3(0, 1, 0);
+	P2d[2] = vec3(0, 2, 0);
+	P2d[3] = vec3(0, 3, 0);
+	P2d[4] = vec3(1, 0, 0);
+	P2d[5] = vec3(1, 1, 1);
+	P2d[6] = vec3(1, 2, 1);
+	P2d[7] = vec3(1, 3, 0);
+	P2d[8] = vec3(2, 0, 0);
+	P2d[9] = vec3(2, 1, 1);
+	P2d[10] = vec3(2, 2, 1);
+	P2d[11] = vec3(2, 3, 0);
+	P2d[12] = vec3(3, 0, 0);
+	P2d[13] = vec3(3, 1, 0);
+	P2d[14] = vec3(3, 2, 0);
+	P2d[15] = vec3(3, 3, 0);
+
+	vec3 dU = dUBezier3_2D(P2d, 0.5, 0.5);
+	vec3 dV = dUBezier3_2D(P2d, 0.5, 0.5);
+	vec3 normal = Bezier3_2D_GetNormal(P2d, 0.5, 0.5);
+
+	return true;
+}

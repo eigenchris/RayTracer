@@ -1,5 +1,4 @@
-#ifndef SHAPES_H
-#define SHAPES_H
+#pragma once
 
 #include <glm\glm.hpp>
 
@@ -191,7 +190,3 @@ public:
 	}
 
 };
-
-
-#endif // !SHAPES_H
-
