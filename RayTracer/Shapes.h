@@ -1,7 +1,10 @@
 #pragma once
 
-#include <glm\glm.hpp>
+#define _USE_MATH_DEFINES
 
+#include <glm\glm.hpp>
+#include <vector>
+#include <math.h>
 
 using namespace glm;
 using namespace std;
@@ -190,3 +193,78 @@ public:
 	}
 
 };
+
+// assume that v0,v1,v2,v3 are listed in CCW order
+void QuadToTrianges(const vec3& v0, const vec3& v1, const vec3& v2, const vec3& v3, const vec4& colour, Triangle* t1, Triangle* t2) {
+	t1 = new Triangle(v0, v1, v2, colour);
+	t2 = new Triangle(v3, v0, v2, colour);
+}
+
+
+// y = r*cos(phi)
+// x = r*cos(phi)*sin(th)
+// z = r*sin(phi)*sin(th)
+// phi = from north pole [0,PI]; th = all around [0,2*PI)  
+vector<Shape*>* TriangulateSphere(Sphere* sphere, int stacks, int slices) {
+	vector<Shape*>* triangleList = new vector<Shape*>();
+	vec3 northPole = vec3(0, sphere->radius, 0);
+	vec3 southPole = vec3(0, -sphere->radius, 0);
+
+	float phi, theta, radius;
+	float y, yNext, cosPhi, sinPhi, cosPhiNext, sinPhiNext;
+	vec3 v0, v1, v2, v3, center;
+	Triangle *t1, *t2;
+	radius = sphere->radius;
+
+	vector<float> phis, thetas;
+	for (int i = 0; i < stacks; i++) {
+		phis.push_back(i * M_PI / stacks);
+	}
+	for (int j = 0; j < slices; j++) {
+		thetas.push_back(j * 2 * M_PI / slices);
+	}
+
+	// top "cap" of sphere
+	phi = M_PI / stacks;
+	cosPhi = cos(phi);
+	sinPhi = sin(phi);
+	for (int j = 0; j < slices; j++) {
+		v1 = vec3(radius*sinPhi*cos(thetas[j%slices]), radius*cosPhi, radius*sinPhi*sin(thetas[j%slices]));
+		v2 = vec3(radius*sinPhi*cos(thetas[(j+1)%slices]), radius*cosPhi, radius*sinPhi*sin(thetas[(j+1)%slices]));
+		t1 = new Triangle(northPole+sphere->center, v2 + sphere->center, v1+sphere->center, sphere->colour);
+		triangleList->push_back(t1);
+	}
+
+	// bottom "cap" of sphere
+	phi = (stacks - 1)*M_PI / stacks;
+	cosPhi = cos(phi);
+	sinPhi = sin(phi);
+	for (int j = slices; j > 0; j--) {
+		v1 = vec3(radius*sinPhi*cos(thetas[j%slices]), radius*cosPhi, radius*sinPhi*sin(thetas[j%slices]));
+		v2 = vec3(radius*sinPhi*cos(thetas[(j - 1) % slices]), radius*cosPhi, radius*sinPhi*sin(thetas[(j - 1) % slices]));
+		t1 = new Triangle(southPole + sphere->center, v2 + sphere->center, v1 + sphere->center, sphere->colour);
+		triangleList->push_back(t1);
+	}
+
+	// all the quads in between
+	for (int i = 1; i < stacks-1; i++) {
+		cosPhi = cos(phis[i]);
+		cosPhiNext = cos(phis[i+1]);
+		sinPhi = sin(phis[i]);
+		sinPhiNext = sin(phis[i+1]);
+		y = radius*cosPhi;
+		yNext = radius*cosPhiNext;
+		for (int j = 0; j < slices; j++) {
+			v0 = vec3(radius*sinPhi*cos(thetas[j%slices]),				radius*cosPhi,		radius*sinPhi*sin(thetas[j%slices]));
+			v1 = vec3(radius*sinPhiNext*cos(thetas[j%slices]),			radius*cosPhiNext,	radius*sinPhiNext*sin(thetas[j%slices]));
+			v2 = vec3(radius*sinPhiNext*cos(thetas[(j + 1) % slices]),	radius*cosPhiNext,	radius*sinPhiNext*sin(thetas[(j + 1) %slices]));
+			v3 = vec3(radius*sinPhi*cos(thetas[(j + 1) % slices]),		radius*cosPhi,		radius*sinPhi*sin(thetas[(j + 1) % slices]));
+			t1 = new Triangle(v0+sphere->center, v2 + sphere->center, v1 + sphere->center, sphere->colour);
+			t2 = new Triangle(v3 + sphere->center, v2 + sphere->center, v0 + sphere->center, sphere->colour);
+			triangleList->push_back(t1);
+			triangleList->push_back(t2);
+		}
+	}
+
+	return triangleList;
+}

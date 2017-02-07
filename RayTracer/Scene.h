@@ -344,10 +344,14 @@ void Rasterizer(Camera* camera, Scene* scene, FrameBuffer* frameBuffer) {
 		vec3 v0 = camera->worldPointToPixelCoords(triangle->pA);
 		vec3 v1 = camera->worldPointToPixelCoords(triangle->pB);
 		vec3 v2 = camera->worldPointToPixelCoords(triangle->pC);
+		// do guroud shading on the vertices
+		vec3 c0 = vec4(triangle->cA, 1.0) * PhongShader(triangle->pA, triangle->normalVector, camera, scene->lightSources);
+		vec3 c1 = vec4(triangle->cB, 1.0) * PhongShader(triangle->pB, triangle->normalVector, camera, scene->lightSources);
+		vec3 c2 = vec4(triangle->cC, 1.0) * PhongShader(triangle->pC, triangle->normalVector, camera, scene->lightSources);
 		// prepare C/Z ratios for perspective colouring
-		vec3 c0 = triangle->cA / v0.z;
-		vec3 c1 = triangle->cB / v1.z;
-		vec3 c2 = triangle->cC / v2.z;
+		c0 /= v0.z;
+		c1 /= v1.z;
+		c2 /= v2.z;
 
 		// get bounds of rasterization box, and clip them if needed
 		vec2 minV = vec2(std::min(std::min(v0.x, v1.x), v2.x), std::min(std::min(v0.y, v1.y), v2.y));

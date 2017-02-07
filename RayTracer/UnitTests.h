@@ -124,6 +124,13 @@ bool BezierTest() {
 	P2d[14] = vec3(3, 2, 0);
 	P2d[15] = vec3(3, 3, 0);
 
+	float t = 0.0;
+	while (t <= 1.0) {
+		vec3 v = Bezier3_2D(P2d, t, 0.5);
+		cout << "t=" << t << "\t" << "B(" << t << ",0.5)= (" << v.x << "," << v.y << "," << v.z << ")" << endl;
+		t += 0.01;
+	}
+
 	vec3 dU = dUBezier3_2D(P2d, 0.5, 0.5);
 	vec3 dV = dUBezier3_2D(P2d, 0.5, 0.5);
 	vec3 normal = Bezier3_2D_GetNormal(P2d, 0.5, 0.5);

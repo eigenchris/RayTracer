@@ -24,12 +24,16 @@ void LoadScene1(Scene*);
 void LoadScene2(Scene*);
 void LoadScene3(Scene*);
 void LoadScene4(Scene*);
+void LoadScene5(Scene*);
+void LoadScene6(Scene*);
+
+/*
+clock_t start = clock();
+double duration = (clock() - start)/(double) CLOCKS_PER_SEC;
+cout << "duration: " << duration << endl;
+*/
 
 int main() {
-	BezierTest();
-	return 0;
-
-
 	cout << "Hello World!" << endl;
 
 	const int WIDTH = 512;
@@ -39,15 +43,13 @@ int main() {
 	Camera* camera = new Camera(WIDTH, HEIGHT);
 	Scene* scene = new Scene();
 
-	LoadScene4(scene);
+	LoadScene5(scene);
 
-	//vec3 r = camera->worldPointToPixelCoords(vec3(0,0,-1));
-	//vec3 r2 = camera->worldPointToPixelCoords(vec3(-1, 1, -1));
-	//vec3 r3 = camera->worldPointToPixelCoords(vec3(1, -1, -1));
-	
+
 	int recurseNumber = 5;
-	RecursiveRayTrace(camera, scene, frameBuffer, recurseNumber);
-	//Rasterizer(camera, scene, frameBuffer);
+	//RecursiveRayTrace(camera, scene, frameBuffer, recurseNumber);
+
+	Rasterizer(camera, scene, frameBuffer);
 
 	MyPngWriter(frameBuffer, WIDTH, HEIGHT, "output.png");
 
@@ -106,8 +108,8 @@ void LoadScene4(Scene* scene) {
 
 	Sphere* sphere = new Sphere(vec3(0, 0, -4), 0.4, vec4(0, 0.5, 1, 1));
 	sphere->refractiveIndex = 0.8;
-	sphere->materialType = REFLECTION_AND_REFRACTION;
-	//sphere->materialType = REFLECTION;
+	//sphere->materialType = REFLECTION_AND_REFRACTION;
+	sphere->materialType = REFLECTION;
 
 	//LightSource* light = new LightSource{ vec3(0.5, 2, -1), vec3(1, 1, 1) };
 	LightSource* light = new LightSource{ vec3(0.5, 2, -3.8), vec3(1, 1, 1) };
@@ -120,6 +122,36 @@ void LoadScene4(Scene* scene) {
 	scene->lightSources->push_back(light);
 }
 
+// A sphere and lightsource at a variable distance from the screen
+void LoadScene5(Scene* scene) {
+	float distanceFromCamera = 2;
+	
+	vec3 d = vec3(0, 0, -distanceFromCamera);
+
+	Sphere* sph = new Sphere(d, 1, vec4(0, 1, 0, 1));
+	//scene->shapes->push_back((Shape*)sph);
+
+	scene->shapes = TriangulateSphere(sph,4,4);
+
+	LightSource* light = new LightSource{ vec3(1,1,1)+d, vec3(1, 1, 1) };
+	//LightSource* light2 = new LightSource{ vec3(-2,1,1)+d, vec3(1, 1, 1) };
+	scene->lightSources->push_back(light);
+	//scene->lightSources->push_back(light2);
+}
+
+
+// Spheres to check coord system
+void LoadScene6(Scene* scene) {
+	Sphere* sph1 = new Sphere(vec3(2,0,-5), 1, vec4(1, 0, 0, 1));
+	Sphere* sph2 = new Sphere(vec3(0,2,-5), 1, vec4(0, 1, 0, 1));
+	Sphere* sph3 = new Sphere(vec3(0,0,-3), 1, vec4(0, 0, 1, 1));
+	scene->shapes->push_back(sph1);
+	scene->shapes->push_back(sph2);
+	scene->shapes->push_back(sph3);
+	
+	LightSource* light = new LightSource{ vec3(1,1,1), vec3(1, 1, 1) };
+	scene->lightSources->push_back(light);
+}
 
 /*
 Triangle* tri1 = new Triangle(vec3(0, 0, -5), vec3(-2, 0, -3), vec3(-2, 2, -3), vec4(1.0, 0.3, 0.0, 1));
