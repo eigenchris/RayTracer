@@ -5,10 +5,10 @@
 #include <glm\glm.hpp>
 #include <vector>
 #include <math.h>
+#include <Bezier.h>
 
 using namespace glm;
 using namespace std;
-
 
 
 struct LightSource {
@@ -268,3 +268,74 @@ vector<Shape*>* TriangulateSphere(Sphere* sphere, int stacks, int slices) {
 
 	return triangleList;
 }
+
+
+void TriangulateBezierSurface(vector<Shape*>* triangleList, vec3* P, int uDivs, int vDivs, const vec4& colour = vec4(1,1,1,1)) {
+	//assuming P has 16 elements
+	// P0, P1, P2, P3 travel up along the v-direction
+	float u0, u1, v0, v1;
+	vec3 p0, p1, p2, p3;
+	for (int i = 0; i < uDivs; i++) {
+		u0 = (float)i / (float)uDivs;
+		u1 = (float)(i+1) / (float)uDivs;
+		for (int j = 0; j < vDivs; j++) {
+			v0 = (float)j / (float)vDivs;
+			v1 = (float)(j+1) / (float)vDivs;
+
+			p0 = Bezier3_2D(P, u0, v0);
+			p1 = Bezier3_2D(P, u0, v1);
+			p2 = Bezier3_2D(P, u1, v1);
+			p3 = Bezier3_2D(P, u1, v0);
+
+			Triangle* t1 = new Triangle(p0, p1, p2, colour);
+			Triangle* t2 = new Triangle(p0, p2, p3, colour);
+
+			triangleList->push_back(t1);
+			triangleList->push_back(t2);
+		}
+	}
+}
+
+
+
+
+/*
+void GetTeapot(Scene* scene) {
+
+
+	uint32_t divs = 16;
+	Vec3f *P = new Vec3f[(divs + 1) * (divs + 1)];
+	uint32_t *nvertices = new uint32_t[divs * divs];
+	uint32_t *vertices = new uint32_t[divs * divs * 4];
+	Vec3f controlPoints[16];
+	for (int np = 0; np < kTeapotNumPatches; ++np) {
+		// set the control points for the current patch                                                                                                                                                    
+		for (uint32_t i = 0; i < 16; ++i)
+			controlPoints[i][0] = teapotVertices[teapotPatches[np][i] - 1][0],
+			controlPoints[i][1] = teapotVertices[teapotPatches[np][i] - 1][1],
+			controlPoints[i][2] = teapotVertices[teapotPatches[np][i] - 1][2];
+		// generate grid                                                                                                                                                                                   
+		for (uint16_t j = 0, k = 0; j <= divs; ++j) {
+			for (uint16_t i = 0; i <= divs; ++i, ++k) {
+				P[k] = evalBezierPatch(controlPoints, i / (float)divs, j / (float)divs);
+			}
+		}
+		// face connectivity
+		for (uint16_t j = 0, k = 0; j < divs; ++j) {
+			for (uint16_t i = 0; i < divs; ++i, ++k) {
+				nvertices[k] = 4;
+				vertices[k * 4] = (divs + 1) * j + i;
+				vertices[k * 4 + 1] = (divs + 1) * (j + 1) + i;
+				vertices[k * 4 + 2] = (divs + 1) * (j + 1) + i + 1;
+				vertices[k * 4 + 3] = (divs + 1) * j + i + 1;
+			}
+		}
+
+		objects.push_back(new PolygonMesh(o2w, divs * divs, nvertices, vertices, P));
+	}
+
+	delete[] P;
+	delete[] nvertices;
+	delete[] vertices;
+}
+*/

@@ -26,6 +26,7 @@ void LoadScene3(Scene*);
 void LoadScene4(Scene*);
 void LoadScene5(Scene*);
 void LoadScene6(Scene*);
+void LoadScene7(Scene*);
 
 /*
 clock_t start = clock();
@@ -43,7 +44,7 @@ int main() {
 	Camera* camera = new Camera(WIDTH, HEIGHT);
 	Scene* scene = new Scene();
 
-	LoadScene5(scene);
+	LoadScene7(scene);
 
 
 	int recurseNumber = 5;
@@ -150,6 +151,69 @@ void LoadScene6(Scene* scene) {
 	scene->shapes->push_back(sph3);
 	
 	LightSource* light = new LightSource{ vec3(1,1,1), vec3(1, 1, 1) };
+	scene->lightSources->push_back(light);
+}
+
+
+// Simple Bezier surface
+void LoadScene7(Scene* scene) {
+	vec3 P2d[16];
+	P2d[0] = vec3(0, 0, -5);
+	P2d[1] = vec3(0, 1, -5);
+	P2d[2] = vec3(0, 2, -5);
+	P2d[3] = vec3(0, 3, -5);
+	P2d[4] = vec3(1, 0, -5);
+	P2d[5] = vec3(1, 1, -3);
+	P2d[6] = vec3(1, 2, -3);
+	P2d[7] = vec3(1, 3, -5);
+	P2d[8] = vec3(2, 0, -5);
+	P2d[9] = vec3(2, 1, -3);
+	P2d[10] = vec3(2, 2, -3);
+	P2d[11] = vec3(2, 3, -5);
+	P2d[12] = vec3(3, 0, -5);
+	P2d[13] = vec3(3, 1, -5);
+	P2d[14] = vec3(3, 2, -5);
+	P2d[15] = vec3(3, 3, -5);
+	
+	mat4 trans1 = mat4();
+	trans1[3][2] = 5;
+	mat4 rot = mat4();
+	rot[0][0] = cos(45*M_PI/180); rot[0][2] = sin(45*M_PI/180);
+	rot[2][0] = -sin(45*M_PI/180); rot[2][2] = cos(45*M_PI/180);
+	mat4 trans2 = mat4();
+	trans2[3][2] = -5;
+
+	vec4 temp;
+	for (int i = 0; i < 16; i++) {
+		temp = vec4(P2d[i], 1.0);
+		temp = trans1 * temp;
+		temp = rot* temp;
+		temp = trans2 * temp;
+		P2d[i] = temp;
+	}
+		
+	/*
+	P2d[0] = vec3(0, 0, -3);
+	P2d[1] = vec3(0, 0, -3);
+	P2d[2] = vec3(0, 0, -3);
+	P2d[3] = vec3(0, 0, -3);
+	P2d[4] = vec3(1, 0, -4);
+	P2d[5] = vec3(1, 1, -4);
+	P2d[6] = vec3(1, 1, -4);
+	P2d[7] = vec3(1, 0, -4);
+	P2d[8] = vec3(2, 0, -5);
+	P2d[9] = vec3(2, 1, -5);
+	P2d[10] = vec3(2, 1, -5);
+	P2d[11] = vec3(2, 0, -5);
+	P2d[12] = vec3(3, 0, -6);
+	P2d[13] = vec3(3, 0, -6);
+	P2d[14] = vec3(3, 0, -6);
+	P2d[15] = vec3(3, 0, -6);
+	*/
+
+	TriangulateBezierSurface(scene->shapes, P2d, 100, 100, vec4(0, 1, 0, 1));
+	
+	LightSource* light = new LightSource{ vec3(1,1,-1), vec3(1, 1, 1) };
 	scene->lightSources->push_back(light);
 }
 

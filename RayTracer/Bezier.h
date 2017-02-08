@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+using namespace glm;
+
 // B(t) = P0*(1-t)^3 + 3*P1*t*(1-t)^2 + 3*P2*(t^2)*(1-t) + P3*t^3
 // B(t) = P0*(1 - 3t + 3t^2 -t^3) P1*(0 + 3t -6t^2 + 3t^3) + P2*(0 + 0t + 3t^2 - 3t^3) + P3*(0 + 0t + 0t^2 + t^3)
 // B(t) =   [P0 P1 P2 P3] * M * [1 t t^2 t^3]^T
@@ -28,7 +30,7 @@ vec3 dBezier3_1D(vec3 P[4], float t) {
 }
 
 //P(u,v) = sum_i sum_j Bi(u) * Bj(v) * P_ij
-vec3 Bezier3_2D(vec3 P[16], float u, float v)
+vec3 Bezier3_2D(vec3* P, float u, float v)
 {
 	vec3 Pu[4];
 	// compute 4 control points along u direction
@@ -37,11 +39,11 @@ vec3 Bezier3_2D(vec3 P[16], float u, float v)
 		curveP[0] = P[i * 4];
 		curveP[1] = P[i * 4 + 1];
 		curveP[2] = P[i * 4 + 2];
-		curveP[2] = P[i * 4 + 3];
+		curveP[3] = P[i * 4 + 3];
 		Pu[i] = Bezier3_1D(curveP, u);
 	}
 	// compute final position on the surface using v
-	return dBezier3_1D(Pu, v);
+	return Bezier3_1D(Pu, v);
 }
 
 vec3 dUBezier3_2D(vec3 P[16], float u, float v)
@@ -53,7 +55,7 @@ vec3 dUBezier3_2D(vec3 P[16], float u, float v)
 		curveP[0] = P[i * 4];
 		curveP[1] = P[i * 4 + 1];
 		curveP[2] = P[i * 4 + 2];
-		curveP[2] = P[i * 4 + 3];
+		curveP[3] = P[i * 4 + 3];
 		dPu[i] = dBezier3_1D(curveP, u);
 	}
 	// compute final position on the surface using v
@@ -69,7 +71,7 @@ vec3 dVBezier3_2D(vec3 P[16], float u, float v)
 		curveP[0] = P[i * 4];
 		curveP[1] = P[i * 4 + 1];
 		curveP[2] = P[i * 4 + 2];
-		curveP[2] = P[i * 4 + 3];
+		curveP[3] = P[i * 4 + 3];
 		Pu[i] = Bezier3_1D(curveP, u);
 	}
 	// compute final position on the surface using v
