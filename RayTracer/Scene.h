@@ -339,6 +339,7 @@ void Rasterizer(Camera* camera, Scene* scene, FrameBuffer* frameBuffer) {
 	frameBuffer->ClearBuffers();
 
 	for (int idx = 0; idx < shapesList.size(); idx++) {
+		cout << idx << " of " << shapesList.size() << endl;
 		if (shapesList[idx]->tag != "Triangle") continue;
 		Triangle* triangle = (Triangle*)shapesList[idx];
 		vec3 v0 = camera->worldPointToPixelCoords(triangle->pA);

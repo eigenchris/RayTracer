@@ -27,6 +27,7 @@ void LoadScene4(Scene*);
 void LoadScene5(Scene*);
 void LoadScene6(Scene*);
 void LoadScene7(Scene*);
+void LoadScene8(Scene*);
 
 /*
 clock_t start = clock();
@@ -44,8 +45,7 @@ int main() {
 	Camera* camera = new Camera(WIDTH, HEIGHT);
 	Scene* scene = new Scene();
 
-	LoadScene7(scene);
-
+	LoadScene8(scene);
 
 	int recurseNumber = 5;
 	//RecursiveRayTrace(camera, scene, frameBuffer, recurseNumber);
@@ -213,6 +213,14 @@ void LoadScene7(Scene* scene) {
 
 	TriangulateBezierSurface(scene->shapes, P2d, 100, 100, vec4(0, 1, 0, 1));
 	
+	LightSource* light = new LightSource{ vec3(1,1,-1), vec3(1, 1, 1) };
+	scene->lightSources->push_back(light);
+}
+
+
+// Utah teapot
+void LoadScene8(Scene* scene) {
+	GetTeapot(scene->shapes, 32, 32);
 	LightSource* light = new LightSource{ vec3(1,1,-1), vec3(1, 1, 1) };
 	scene->lightSources->push_back(light);
 }

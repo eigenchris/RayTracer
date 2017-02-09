@@ -4,5 +4,6 @@ Debug/*
 
 packages/*
 RayTracer/Debug/*
+RayTracer/SphereZoom/*
 RayTracer/output*
 .vs/*

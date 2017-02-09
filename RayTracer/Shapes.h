@@ -6,6 +6,7 @@
 #include <vector>
 #include <math.h>
 #include <Bezier.h>
+#include <TeapotData.h>
 
 using namespace glm;
 using namespace std;
@@ -297,45 +298,27 @@ void TriangulateBezierSurface(vector<Shape*>* triangleList, vec3* P, int uDivs, 
 }
 
 
+void GetTeapot(vector<Shape*>* shapeList, int uDivs = 16, int vDivs = 16) {
+	vec3 patchControlPoints[16]; // control points for one 2D patch
+	vec4 pushBackwardVector = vec4(0, 0, -6, 0);
+	const int c[16] = { 0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 }; //convert indexes correctly
+	mat4 rot = mat4();
+	rot[1][1] = cos(45 * M_PI / 180); rot[1][2] = -sin(45 * M_PI / 180);
+	rot[2][1] = sin(45 * M_PI / 180); rot[2][2] = cos(45 * M_PI / 180);
 
 
-/*
-void GetTeapot(Scene* scene) {
-
-
-	uint32_t divs = 16;
-	Vec3f *P = new Vec3f[(divs + 1) * (divs + 1)];
-	uint32_t *nvertices = new uint32_t[divs * divs];
-	uint32_t *vertices = new uint32_t[divs * divs * 4];
-	Vec3f controlPoints[16];
-	for (int np = 0; np < kTeapotNumPatches; ++np) {
-		// set the control points for the current patch                                                                                                                                                    
-		for (uint32_t i = 0; i < 16; ++i)
-			controlPoints[i][0] = teapotVertices[teapotPatches[np][i] - 1][0],
-			controlPoints[i][1] = teapotVertices[teapotPatches[np][i] - 1][1],
-			controlPoints[i][2] = teapotVertices[teapotPatches[np][i] - 1][2];
-		// generate grid                                                                                                                                                                                   
-		for (uint16_t j = 0, k = 0; j <= divs; ++j) {
-			for (uint16_t i = 0; i <= divs; ++i, ++k) {
-				P[k] = evalBezierPatch(controlPoints, i / (float)divs, j / (float)divs);
-			}
+	//for each patch, do a triangulation
+	//for (int patchIdx = 0; patchIdx < kTeapotNumPatches; patchIdx++) {
+	int myPatch = 31;
+	for (int patchIdx = 0; patchIdx < myPatch+1; patchIdx++) {
+		//float controlPointIdxs[16] = teapotPatches[patchIdx];
+		for (int cpIdx = 0; cpIdx < 16; cpIdx++) {
+			int cpIndex = teapotPatches[patchIdx][cpIdx] - 1;
+			vec4 point = vec4(teapotVertices[cpIndex][0], teapotVertices[cpIndex][1], teapotVertices[cpIndex][2], 1.0);
+			point = rot * point;
+			point += pushBackwardVector;
+			patchControlPoints[c[cpIdx]] = point;
 		}
-		// face connectivity
-		for (uint16_t j = 0, k = 0; j < divs; ++j) {
-			for (uint16_t i = 0; i < divs; ++i, ++k) {
-				nvertices[k] = 4;
-				vertices[k * 4] = (divs + 1) * j + i;
-				vertices[k * 4 + 1] = (divs + 1) * (j + 1) + i;
-				vertices[k * 4 + 2] = (divs + 1) * (j + 1) + i + 1;
-				vertices[k * 4 + 3] = (divs + 1) * j + i + 1;
-			}
-		}
-
-		objects.push_back(new PolygonMesh(o2w, divs * divs, nvertices, vertices, P));
+		TriangulateBezierSurface(shapeList, patchControlPoints, uDivs, vDivs, vec4(0, 1, 0, 1));
 	}
-
-	delete[] P;
-	delete[] nvertices;
-	delete[] vertices;
 }
-*/

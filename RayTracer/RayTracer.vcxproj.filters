@@ -44,6 +44,9 @@
     <ClInclude Include="Bezier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TeapotData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
