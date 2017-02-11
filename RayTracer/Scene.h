@@ -110,7 +110,7 @@ A specular reflection is only a reflection of a light source off of the surface 
 
 
 
-vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSource*>* lightSources) {
+vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSource*>* lightSources, bool useBlinnPhong = false) {
 	// constants
 	const float ambientReflectionConstant = 0.1f;
 	const float diffuseReflectionConstant = 0.8f;
@@ -132,8 +132,15 @@ vec4 PhongShader(vec3 hitPosition, vec3 normal, Camera* camera, vector<LightSour
 
 		// specular lighting
 		vec3 hitToCameraDir = normalize(camera->positionInWorldCoords - hitPosition);
-		vec3 reflectDir = reflect(-hitToLightDir, normal);
-		float powerTerm = pow(std::max(dot(hitToCameraDir, reflectDir), 0.0f), shininessConstant);
+		float powerTerm;
+		if (useBlinnPhong) {
+			vec3 halfwayVector = normalize(hitToLightDir + hitToCameraDir);
+			powerTerm = pow(std::max(dot(halfwayVector, normal), 0.0f), 4 * shininessConstant); //4* is a good guess for modifying shininess constant
+		}
+		else {
+			vec3 reflectDir = reflect(-hitToLightDir, normal);
+			powerTerm = pow(std::max(dot(hitToCameraDir, reflectDir), 0.0f), shininessConstant);
+		}
 		specularPortion += powerTerm*light->colour; // case for tinting specular reflection with colour
 	}
 
@@ -211,7 +218,7 @@ vec4 FindColour(Scene* scene, Camera* camera, Shape* shape, vec3 hitPosition) {
 	vector<LightSource*>* lightList = (scene->lightSources);
 	//LightSource* light = lightList[0];
 
-	vec4 lightEffect = PhongShader(hitPosition, normal, camera, lightList);
+	vec4 lightEffect = PhongShader(hitPosition, normal, camera, lightList, true);
 	return lightEffect * shape->colour;
 }
 

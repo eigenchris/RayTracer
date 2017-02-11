@@ -45,12 +45,12 @@ int main() {
 	Camera* camera = new Camera(WIDTH, HEIGHT);
 	Scene* scene = new Scene();
 
-	LoadScene8(scene);
+	LoadScene1(scene);
 
 	int recurseNumber = 5;
-	//RecursiveRayTrace(camera, scene, frameBuffer, recurseNumber);
+	RecursiveRayTrace(camera, scene, frameBuffer, recurseNumber);
 
-	Rasterizer(camera, scene, frameBuffer);
+	//Rasterizer(camera, scene, frameBuffer);
 
 	MyPngWriter(frameBuffer, WIDTH, HEIGHT, "output.png");
 

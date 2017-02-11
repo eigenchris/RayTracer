@@ -306,6 +306,8 @@ void GetTeapot(vector<Shape*>* shapeList, int uDivs = 16, int vDivs = 16) {
 	rot[1][1] = cos(45 * M_PI / 180); rot[1][2] = -sin(45 * M_PI / 180);
 	rot[2][1] = sin(45 * M_PI / 180); rot[2][2] = cos(45 * M_PI / 180);
 
+	vec4 cccc[6] = { vec4(1,0,0,1), vec4(0,1,0,1), vec4(0,0,1,1), vec4(1,1,0,1), vec4(1,0,1,1), vec4(0,1,1,1) };
+
 
 	//for each patch, do a triangulation
 	//for (int patchIdx = 0; patchIdx < kTeapotNumPatches; patchIdx++) {
@@ -319,6 +321,7 @@ void GetTeapot(vector<Shape*>* shapeList, int uDivs = 16, int vDivs = 16) {
 			point += pushBackwardVector;
 			patchControlPoints[c[cpIdx]] = point;
 		}
-		TriangulateBezierSurface(shapeList, patchControlPoints, uDivs, vDivs, vec4(0, 1, 0, 1));
+		//TriangulateBezierSurface(shapeList, patchControlPoints, uDivs, vDivs, vec4(0, 1, 0, 1));
+		TriangulateBezierSurface(shapeList, patchControlPoints, uDivs, vDivs, cccc[patchIdx % 6]);
 	}
 }
